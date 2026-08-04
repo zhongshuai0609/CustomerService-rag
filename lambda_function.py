@@ -2,12 +2,8 @@ import json
 import traceback
 
 from errors import AppError
+from log_utils import log_progress
 from service import chat, refresh_faq_embeddings
-
-
-def log_progress(message, **fields):
-    details = " ".join(f"{key}={value}" for key, value in fields.items())
-    print(f"{message}: {details}" if details else message, flush=True)
 
 
 def lambda_handler(event, context):

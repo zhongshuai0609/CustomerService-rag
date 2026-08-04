@@ -4,11 +4,7 @@ import db
 import llm_client
 import prompts
 from errors import AppError
-
-
-def log_progress(message, **fields):
-    details = " ".join(f"{key}={value}" for key, value in fields.items())
-    print(f"{message}: {details}" if details else message, flush=True)
+from log_utils import log_progress
 
 
 # RAG retrieves the 3 FAQ entries with the highest similarity.

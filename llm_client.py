@@ -1,10 +1,11 @@
 import json
 import os
-import traceback
+import traceback #异常时打印调用链，方便定位哪里出了问题
 
 from openai import OpenAI
 
 from errors import AppError
+from log_utils import log_progress
 
 
 LLM_MODEL = os.environ.get("LLM_MODEL", "gpt-5.6-luna")
@@ -31,7 +32,7 @@ def embed_text(text):
         result = get_openai_client().embeddings.create(model=EMBEDDING_MODEL, input=text)
         return result.data[0].embedding
     except Exception as exc:
-        print("OpenAI embedding request failed", flush=True)
+        log_progress("OpenAI embedding request failed")
         traceback.print_exc()
         raise AppError(502, f"OpenAI embedding call failed: {exc}") from exc
 
@@ -46,17 +47,17 @@ def call_llm(messages):
         raw_content = llm_response.choices[0].message.content
         parsed = json.loads(raw_content)
     except json.JSONDecodeError as exc:
-        print("OpenAI chat response was not valid JSON", flush=True)
+        log_progress("OpenAI chat response was not valid JSON")
         traceback.print_exc()
         raise AppError(502, f"LLM did not return valid JSON: {exc}") from exc
     except Exception as exc:
-        print("OpenAI chat request failed", flush=True)
+        log_progress("OpenAI chat request failed")
         traceback.print_exc()
         raise AppError(502, f"OpenAI chat call failed: {exc}") from exc
 
     required = {"category", "answer", "confidence", "relevance", "need_human_support", "risk_level"}
     missing = required - set(parsed)
     if missing:
-        print(f"OpenAI chat response missing required fields: missing={sorted(missing)}", flush=True)
+        log_progress("OpenAI chat response missing required fields", missing=sorted(missing))
         raise AppError(502, f"LLM response is missing fields: {sorted(missing)}")
     return parsed
